@@ -134,7 +134,7 @@ def std_delete_line(times=None):
     return
 
 def input_entry():
-    # prompts for a new entry's values and them stores in list
+    # prompts for a new entry's values and then stores in list
     entry = ["", "", "", "", "", ""] # = [type, domain, seedOrData, notes, pepper, format]
     entry[3] = ""
     entry[4] = ""
