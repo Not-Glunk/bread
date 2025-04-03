@@ -8,7 +8,7 @@ import csv
 import pandas as pd
 
 import sys
-import getpass as getpass
+import getpass
 
 PROMPT_COLOR = "\u001b[38;5;221m"
 INPUT_COLOR = "\u001b[38;5;214m"
@@ -119,7 +119,20 @@ def add_entry(csv_file, entry):
         passphrase = getpass.getpass(prompt=f"{PROMPT_COLOR}Passphrase: {INPUT_COLOR}"); std_delete_line()
         entry[2] = base64Encode(aes256Encrypt(entry[2], passphrase))
     add_row(csv_file, entry)
-    return
+
+def delete_entry(csv_file, index_number):
+    """deletes entry with given index, updates all following entries' index accordingly
+    returns False if entry with given index does not exist"""
+    df = pd.read_csv(csv_file)
+    if index_number not in df['index'].values:
+        return False
+
+    # delete entry, update following indexes
+    df = df[df['index'] != index_number]
+    df['index'] = range(1, len(df) + 1)
+
+    df.to_csv(csv_file, index=False)
+    return True
 
 
 def std_delete_line(times=None):
@@ -131,7 +144,6 @@ def std_delete_line(times=None):
             sys.stdout.write("\x1b[2K")
     sys.stdout.write("\x1b[1F")
     sys.stdout.write("\x1b[2K")
-    return
 
 def input_entry():
     """prompts for a new entry's values and then stores in list"""
@@ -195,7 +207,6 @@ def print_entry(entry):
         row["index"] = int(row["index"])
         row_list = row.to_list()
         print("  ".join(f"\u001b[38;5;69m{str(row_list[i]):<{col_widths[i]}}{DEFAULT_COLOR}" for i in range(len(row_list))))
-    return
 
 
 
@@ -213,6 +224,7 @@ menu_text = """
 1) Attempt generating password/data
 2) Search for entry
 3) Add entry
+4) Delete entry
 
 0) Exit
 """
@@ -222,7 +234,7 @@ while answer not in ['0', 'exit']:
     
     answer = input(f"{PROMPT_COLOR}Select option: {INPUT_COLOR}")
     if (answer in ['1', 'generate']):
-        std_delete_line(8)
+        std_delete_line(9)
         search_term = input(f"{PROMPT_COLOR}Search for: {INPUT_COLOR}"); std_delete_line()
         search_result = search_keyword_in_column('dough.csv', 'domain', search_term)
 
@@ -246,7 +258,7 @@ while answer not in ['0', 'exit']:
         print(f"{LOG_COLOR}---{DEFAULT_COLOR}")
 
     elif (answer in ['2', 'search']):
-        std_delete_line(8)
+        std_delete_line(9)
         search_term = input(f"{PROMPT_COLOR}Search for: {INPUT_COLOR}"); std_delete_line()
         search_result = search_keyword_in_column('dough.csv', 'domain', search_term)
         if search_result.empty:
@@ -257,16 +269,42 @@ while answer not in ['0', 'exit']:
         print(f"{LOG_COLOR}---{DEFAULT_COLOR}")
 
     elif (answer in ['3', 'add']):
-        std_delete_line(8)
+        std_delete_line(9)
         print(f"{DEFAULT_COLOR}"); std_delete_line()
         inputted_entry = input_entry()
         add_entry('dough.csv', inputted_entry)
         print(f"{LOG_COLOR}Successfully added entry '{INPUT_COLOR}"+inputted_entry[2]+f"{LOG_COLOR}'.")
         print(f"{LOG_COLOR}---{DEFAULT_COLOR}")
 
-    elif (answer not in ['0', 'exit', '1', 'generate', '2', 'search', '3', 'add']):
-        std_delete_line(8)
+    elif (answer in ['4', 'delete']):
+        std_delete_line(9)
+        #TODO: delete prompt logic (search, select index, are you suuure?), delete_entry() function which HAS to update all following indexes or new ones will run into conflicts
+        search_term = input(f"{PROMPT_COLOR}Search for: {INPUT_COLOR}"); std_delete_line()
+        search_result = search_keyword_in_column('dough.csv', 'domain', search_term)
+
+        if search_result.empty:
+            print(f"{LOG_COLOR}No results for '{INPUT_COLOR}"+search_term+f"{LOG_COLOR}'.")
+        else:
+            print(f"{LOG_COLOR}Results for '{INPUT_COLOR}"+search_term+f"{LOG_COLOR}':")
+            print_entry(search_result)
+            index_to_delete = int(input(f"{PROMPT_COLOR}Index to delete: {INPUT_COLOR}")); std_delete_line()
+            while index_to_delete != "" and not str(index_to_delete).isdigit():
+                print(f"{LOG_COLOR}`index` has to be an int")
+                index_to_delete = int(input(f"{PROMPT_COLOR}Index to delete: {INPUT_COLOR}")); std_delete_line(2)
+
+            answer_sure = input(f"{PROMPT_COLOR}are u suuuure? (type \"y eee s\" to confirm): {INPUT_COLOR}"); std_delete_line()
+            if answer_sure not in ["y eee s"]:
+                print(f"{LOG_COLOR}Aborted deletion.")
+            else:
+                if delete_entry('dough.csv', index_to_delete):
+                    print(f"{LOG_COLOR}Successfully deleted entry with index {INPUT_COLOR}"+str(index_to_delete)+f"{LOG_COLOR}.")
+                else:
+                    print(f"{LOG_COLOR}No entry for index {INPUT_COLOR}"+str(index_to_delete)+f"{LOG_COLOR}.")
+        print(f"{LOG_COLOR}---{DEFAULT_COLOR}")
+
+    elif (answer not in ['0', 'exit', '1', 'generate', '2', 'search', '3', 'add', '4', 'delete']):
+        std_delete_line(9)
 
     print(f"{DEFAULT_COLOR}"); std_delete_line()
-std_delete_line(8)
+std_delete_line(9)
 print(f"{INPUT_COLOR}bye!")
