@@ -278,7 +278,6 @@ while answer not in ['0', 'exit']:
 
     elif (answer in ['4', 'delete']):
         std_delete_line(9)
-        #TODO: delete prompt logic (search, select index, are you suuure?), delete_entry() function which HAS to update all following indexes or new ones will run into conflicts
         search_term = input(f"{PROMPT_COLOR}Search for: {INPUT_COLOR}"); std_delete_line()
         search_result = search_keyword_in_column('dough.csv', 'domain', search_term)
 
