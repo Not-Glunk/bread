@@ -73,7 +73,9 @@ def read_index(csv_file, index_number):
     """returns list containing row with specified index"""
     df = pd.read_csv(csv_file, sep=',', header=None, names=['index', 'type', 'domain', 'seedOrData', 'notes', 'pepper', 'format'], engine='python')
 
-    df['index'] = pd.to_numeric(df['index'], errors='coerce')
+    # pandas 3.0 fix, delete this line and uncomment the one below if you're on a past version, like the one that ships on termux
+    df.loc[:, 'index'] = pd.to_numeric(df['index'], errors='coerce')
+    # df['index'] = pd.to_numeric(df['index'], errors='coerce')
     index_data = df[df['index'] == index_number].iloc[0].values.tolist()
     return index_data
 
