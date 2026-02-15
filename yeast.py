@@ -126,7 +126,7 @@ def add_entry(csv_file, entry):
 def delete_entry(csv_file, index_number):
     """deletes entry with given index, updates all following entries' index accordingly
     returns False if entry with given index does not exist"""
-    df = pd.read_csv(csv_file)
+    df = pd.read_csv(csv_file, dtype={'format': 'Int64'})
     if index_number not in df['index'].values:
         return False
 
