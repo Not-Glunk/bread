@@ -208,6 +208,11 @@ def print_entry(entry):
         row_list = row.to_list()
         print("  ".join(f"\u001b[38;5;69m{str(row_list[i]):<{col_widths[i]}}{DEFAULT_COLOR}" for i in range(len(row_list))))
 
+def print_csv(csv_file):
+    """prints entire csv file"""
+    df = pd.read_csv(csv_file, sep=',', engine='python')
+    print_entry(df)
+
 
 
 print(
@@ -234,7 +239,7 @@ while answer not in ['0', 'exit']:
     
     answer = input(f"{PROMPT_COLOR}Select option: {INPUT_COLOR}")
     if (answer in ['1', 'generate']):
-        std_delete_line(9)
+        std_delete_line(10)
         search_term = input(f"{PROMPT_COLOR}Search for: {INPUT_COLOR}"); std_delete_line()
         search_result = search_keyword_in_column('dough.csv', 'domain', search_term)
 
@@ -258,7 +263,7 @@ while answer not in ['0', 'exit']:
         print(f"{LOG_COLOR}---{DEFAULT_COLOR}")
 
     elif (answer in ['2', 'search']):
-        std_delete_line(9)
+        std_delete_line(10)
         search_term = input(f"{PROMPT_COLOR}Search for: {INPUT_COLOR}"); std_delete_line()
         search_result = search_keyword_in_column('dough.csv', 'domain', search_term)
         if search_result.empty:
@@ -269,7 +274,7 @@ while answer not in ['0', 'exit']:
         print(f"{LOG_COLOR}---{DEFAULT_COLOR}")
 
     elif (answer in ['3', 'add']):
-        std_delete_line(9)
+        std_delete_line(10)
         print(f"{DEFAULT_COLOR}"); std_delete_line()
         inputted_entry = input_entry()
         add_entry('dough.csv', inputted_entry)
@@ -277,7 +282,7 @@ while answer not in ['0', 'exit']:
         print(f"{LOG_COLOR}---{DEFAULT_COLOR}")
 
     elif (answer in ['4', 'delete']):
-        std_delete_line(9)
+        std_delete_line(10)
         search_term = input(f"{PROMPT_COLOR}Search for: {INPUT_COLOR}"); std_delete_line()
         search_result = search_keyword_in_column('dough.csv', 'domain', search_term)
 
@@ -301,9 +306,15 @@ while answer not in ['0', 'exit']:
                     print(f"{LOG_COLOR}No entry for index {INPUT_COLOR}"+str(index_to_delete)+f"{LOG_COLOR}.")
         print(f"{LOG_COLOR}---{DEFAULT_COLOR}")
 
-    elif (answer not in ['0', 'exit', '1', 'generate', '2', 'search', '3', 'add', '4', 'delete']):
-        std_delete_line(9)
+        elif (answer in ['5', 'print']):
+        std_delete_line(10)
+        print(f"{LOG_COLOR}Displaying entire database:")
+        print_csv('dough.csv')
+        print(f"{LOG_COLOR}---{DEFAULT_COLOR}")
+
+    elif (answer not in ['0', 'exit', '1', 'generate', '2', 'search', '3', 'add', '4', 'delete', '5', 'print']):
+        std_delete_line(10)
 
     print(f"{DEFAULT_COLOR}"); std_delete_line()
-std_delete_line(9)
+std_delete_line(10)
 print(f"{INPUT_COLOR}bye!")
