@@ -66,8 +66,9 @@ def aes256Decrypt(ciphertext, key_string):
 def search_keyword_in_column(csv_file, column, keyword):
     """returns pd.DataFrame containing rows with specified keyword contained in column"""
     df = pd.read_csv(csv_file, sep=',', engine='python')
-    result = df[df[column].str.contains(keyword, case=False, na=False)]
-    return result
+    
+    mask = (df[column1].str.contains(keyword, case=False, na=False) | df[column2].str.contains(keyword, case=False, na=False))
+    return df[mask]
 
 def read_index(csv_file, index_number):
     """returns list containing row with specified index"""
@@ -243,7 +244,7 @@ while answer not in ['0', 'exit']:
     if (answer in ['1', 'generate']):
         std_delete_line(10)
         search_term = input(f"{PROMPT_COLOR}Search for: {INPUT_COLOR}"); std_delete_line()
-        search_result = search_keyword_in_column('dough.csv', 'domain', search_term)
+        search_result = search_keyword_in_column('dough.csv', 'domain', 'notes', search_term)
 
         if search_result.empty:
             print(f"{LOG_COLOR}No results for '{INPUT_COLOR}"+search_term+f"{LOG_COLOR}'.")
@@ -267,7 +268,7 @@ while answer not in ['0', 'exit']:
     elif (answer in ['2', 'search']):
         std_delete_line(10)
         search_term = input(f"{PROMPT_COLOR}Search for: {INPUT_COLOR}"); std_delete_line()
-        search_result = search_keyword_in_column('dough.csv', 'domain', search_term)
+        search_result = search_keyword_in_column('dough.csv', 'domain', 'notes', search_term)
         if search_result.empty:
             print(f"{LOG_COLOR}No results for '{INPUT_COLOR}"+search_term+f"{LOG_COLOR}'.")
         else:
@@ -286,7 +287,7 @@ while answer not in ['0', 'exit']:
     elif (answer in ['4', 'delete']):
         std_delete_line(10)
         search_term = input(f"{PROMPT_COLOR}Search for: {INPUT_COLOR}"); std_delete_line()
-        search_result = search_keyword_in_column('dough.csv', 'domain', search_term)
+        search_result = search_keyword_in_column('dough.csv', 'domain', 'notes', search_term)
 
         if search_result.empty:
             print(f"{LOG_COLOR}No results for '{INPUT_COLOR}"+search_term+f"{LOG_COLOR}'.")
