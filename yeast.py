@@ -63,7 +63,7 @@ def aes256Decrypt(ciphertext, key_string):
         return None
 
 
-def search_keyword_in_column(csv_file, column, keyword):
+def search_keyword_in_column(csv_file, column1, column2, keyword):
     """returns pd.DataFrame containing rows with specified keyword contained in column"""
     df = pd.read_csv(csv_file, sep=',', engine='python')
     
