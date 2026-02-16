@@ -233,6 +233,7 @@ menu_text = """
 2) Search for entry
 3) Add entry
 4) Delete entry
+5) Print all entries
 
 0) Exit
 """
