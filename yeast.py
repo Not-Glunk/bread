@@ -309,11 +309,11 @@ while answer not in ['0', 'exit']:
                     print(f"{LOG_COLOR}No entry for index {INPUT_COLOR}"+str(index_to_delete)+f"{LOG_COLOR}.")
         print(f"{LOG_COLOR}---{DEFAULT_COLOR}")
 
-        elif (answer in ['5', 'print']):
-            std_delete_line(10)
-            print(f"{LOG_COLOR}Displaying entire database:")
-            print_csv('dough.csv')
-            print(f"{LOG_COLOR}---{DEFAULT_COLOR}")
+    elif (answer in ['5', 'print']):
+        std_delete_line(10)
+        print(f"{LOG_COLOR}Displaying entire database:")
+        print_csv('dough.csv')
+        print(f"{LOG_COLOR}---{DEFAULT_COLOR}")
 
     elif (answer not in ['0', 'exit', '1', 'generate', '2', 'search', '3', 'add', '4', 'delete', '5', 'print']):
         std_delete_line(10)
