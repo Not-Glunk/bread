@@ -9,6 +9,7 @@ import pandas as pd
 
 import sys
 import getpass
+import os
 
 PROMPT_COLOR = "\u001b[38;5;221m"
 INPUT_COLOR = "\u001b[38;5;214m"
@@ -66,7 +67,7 @@ def aes256Decrypt(ciphertext, key_string):
 def search_keyword_in_column(csv_file, column1, column2, keyword):
     """returns pd.DataFrame containing rows with specified keyword contained in column"""
     df = pd.read_csv(csv_file, sep=',', engine='python')
-    
+
     mask = (df[column1].str.contains(keyword, case=False, na=False) | df[column2].str.contains(keyword, case=False, na=False))
     return df[mask]
 
@@ -87,11 +88,11 @@ def add_row(csv_file, new_entry):
         reader = csv.reader(file)
         header = next(reader)
         rows = list(reader)
-    
+
     next_index = int(rows[-1][0]) + 1 if rows else 1
     new_entry.insert(0, next_index)
     rows.append(new_entry)
-    
+
     with open(csv_file, mode='w', newline='', encoding='utf-8') as file:
         writer = csv.writer(file)
         writer.writerow(header)
@@ -110,7 +111,7 @@ def generate_data_password(row, passphrase):
             data = data[:int(row.iloc[0]['format'])]
         if (pd.notna(row.iloc[0]['pepper'])): # if pepper, concat to hash
             data = row.iloc[0]['pepper'] + data
-    
+
     if (row.iloc[0]['type'] == 'D'): # if data, decrypt aes256
         data = aes256Decrypt(base64Decode(row.iloc[0]['seedOrData']), passphrase)
 
@@ -148,6 +149,17 @@ def std_delete_line(times=None):
     sys.stdout.write("\x1b[1F")
     sys.stdout.write("\x1b[2K")
 
+def clear_stdout(printed_string, stdio):
+    """deletes additional input/output lines
+    printed_string: the already printed output
+    stdio: the variable input or output"""
+    std_length = len(printed_string) + len(stdio)
+    columns = os.get_terminal_size(0).columns
+
+    if  std_length > columns:
+        lines_n = int(std_length / columns)
+        std_delete_line(lines_n)
+
 def input_entry():
     """prompts for a new entry's values and then stores in list"""
     entry = ["", "", "", "", "", ""] # = [type, domain, seedOrData, notes, pepper, format]
@@ -156,41 +168,53 @@ def input_entry():
     entry[5] = ""
 
     entry[0] = input(f"{PROMPT_COLOR}type ('P' for Password, 'D' for Data): {INPUT_COLOR}").upper(); std_delete_line()
+    clear_stdout("type ('P' for Password, 'D' for Data): ", entry[0])
     while (entry[0] not in ['P', 'D']):
         print(f"{LOG_COLOR}`type` has to be either 'P' or 'D'")
         entry[0] = input(f"{PROMPT_COLOR}type ('P' for Password, 'D' for Data): {INPUT_COLOR}").upper(); std_delete_line(2)
+        clear_stdout("type ('P' for Password, 'D' for Data): ", entry[0])
 
     entry[1] = input(f"{PROMPT_COLOR}domain: {INPUT_COLOR}"); std_delete_line()
+    clear_stdout("domain: ", entry[1])
     while (entry[1] == "" or ',' in entry[1]):
         if (',' in entry[1]):
             print(f"{LOG_COLOR}`domain` cannot contain `,`")
         else:
             print(f"{LOG_COLOR}`domain` cannot be null")
         entry[1] = input(f"{PROMPT_COLOR}domain: {INPUT_COLOR}"); std_delete_line(2)
+        clear_stdout("domain: ", entry[1])
 
     entry[2] = input(f"{PROMPT_COLOR}seedOrData: {INPUT_COLOR}"); std_delete_line()
+    clear_stdout("seedOrData: ", entry[2])
     while (entry[2] == "" or ',' in entry[2]):
         if (',' in entry[2]):
             print(f"{LOG_COLOR}`seedOrData` cannot contain `,`")
         else:
             print(f"{LOG_COLOR}`seedOrData` cannot be null")
         entry[2] = input(f"{PROMPT_COLOR}domain: {INPUT_COLOR}"); std_delete_line(2)
-    
-    entry[3] = input(f"{PROMPT_COLOR}notes: {INPUT_COLOR}"); std_delete_line()
+        clear_stdout("seedOrData: ", entry[2])
+
+    entry[3] = input(f"{PROMPT_COLOR}notes: {INPUT_COLOR}"); std_delete_line(2)
+    clear_stdout("notes: ", entry[3])
     while (',' in entry[3]):
         print(f"{LOG_COLOR}`notes` cannot contain `,`")
         entry[3] = input(f"{PROMPT_COLOR}notes: {INPUT_COLOR}"); std_delete_line(2)
+        clear_stdout("notes ", entry[3])
 
     if (entry[0] == 'P'):
         entry[4] = input(f"{PROMPT_COLOR}pepper: {INPUT_COLOR}"); std_delete_line()
+        clear_stdout("pepper: ", entry[4])
         while (',' in entry[4]):
             print(f"{LOG_COLOR}`pepper cannot contain `,`")
             entry[4] = input(f"{PROMPT_COLOR}pepper: {INPUT_COLOR}"); std_delete_line(2)
+            clear_stout("pepper: ", entry[4])
 
         entry[5] = input(f"{PROMPT_COLOR}format (doesnt account for pepper): {INPUT_COLOR}"); std_delete_line()
+        clear_stdout("format (doesnt account for pepper): ", entry[5])
         while (entry[5] != "" and not entry[5].isdigit()):
             print(f"{LOG_COLOR}`format` has to be an int")
             entry[5] = input(f"{PROMPT_COLOR}format (doesnt account for pepper): {INPUT_COLOR}"); std_delete_line(2)
+            clear_stdout("format (doesnt account for pepper): ", entry[5])
     return entry
 
 def print_entry(entry):
@@ -240,7 +264,7 @@ menu_text = """
 answer = "" # why the FUCK does python not have switch statements
 while answer not in ['0', 'exit']:
     print(menu_text)
-    
+
     answer = input(f"{PROMPT_COLOR}Select option: {INPUT_COLOR}")
     if (answer in ['1', 'generate']):
         std_delete_line(10)
@@ -261,7 +285,7 @@ while answer not in ['0', 'exit']:
             generated_data = generate_data_password(read_index('dough.csv', index_to_generate), input_passphrase)
             if (generated_data is not None):
                 print(f"{LOG_COLOR}Generated: {INPUT_COLOR}" + generated_data)
-                input(f"{LOG_COLOR}Press Enter to continue"); std_delete_line(2); print(f"{LOG_COLOR}Generated: {INPUT_COLOR}eh! volevi!")
+                input(f"{LOG_COLOR}Press Enter to continue"); clear_stdout("Generated: ", generated_data); std_delete_line(2); print(f"{LOG_COLOR}Generated: {INPUT_COLOR}eh! volevi!")
             else:
                 print(f"{LOG_COLOR}Failed to generate data.")
         print(f"{LOG_COLOR}---{DEFAULT_COLOR}")
@@ -279,7 +303,7 @@ while answer not in ['0', 'exit']:
 
     elif (answer in ['3', 'add']):
         std_delete_line(10)
-        print(f"{DEFAULT_COLOR}"); std_delete_line()
+        print(f"{DEFAULT_COLOR}");
         inputted_entry = input_entry()
         add_entry('dough.csv', inputted_entry)
         print(f"{LOG_COLOR}Successfully added entry '{INPUT_COLOR}"+inputted_entry[2]+f"{LOG_COLOR}'.")
