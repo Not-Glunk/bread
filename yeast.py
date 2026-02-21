@@ -64,11 +64,11 @@ def aes256Decrypt(ciphertext, key_string):
         return None
 
 
-def search_keyword_in_column(csv_file, column1, column2, keyword):
-    """returns pd.DataFrame containing rows with specified keyword contained in column"""
+def search_keyword_in_columns(csv_file, column1, column2, column3, keyword):
+    """returns pd.DataFrame containing rows with specified keyword in three columns"""
     df = pd.read_csv(csv_file, sep=',', engine='python')
 
-    mask = (df[column1].str.contains(keyword, case=False, na=False) | df[column2].str.contains(keyword, case=False, na=False))
+    mask = (df[column1].str.contains(keyword, case=False, na=False) | df[column2].str.contains(keyword, case=False, na=False) | df[column3].str.contains(keyword, case=False, na=False))
     return df[mask]
 
 def read_index(csv_file, index_number):
@@ -269,7 +269,7 @@ while answer not in ['0', 'exit']:
     if (answer in ['1', 'generate']):
         std_delete_line(10)
         search_term = input(f"{PROMPT_COLOR}Search for: {INPUT_COLOR}"); std_delete_line()
-        search_result = search_keyword_in_column('dough.csv', 'domain', 'notes', search_term)
+        search_result = search_keyword_in_columns('dough.csv', 'domain', 'seedOrData', 'notes', search_term)
 
         if search_result.empty:
             print(f"{LOG_COLOR}No results for '{INPUT_COLOR}"+search_term+f"{LOG_COLOR}'.")
@@ -293,7 +293,7 @@ while answer not in ['0', 'exit']:
     elif (answer in ['2', 'search']):
         std_delete_line(10)
         search_term = input(f"{PROMPT_COLOR}Search for: {INPUT_COLOR}"); std_delete_line()
-        search_result = search_keyword_in_column('dough.csv', 'domain', 'notes', search_term)
+        search_result = search_keyword_in_columns('dough.csv', 'domain', 'seedOrData', 'notes', search_term)
         if search_result.empty:
             print(f"{LOG_COLOR}No results for '{INPUT_COLOR}"+search_term+f"{LOG_COLOR}'.")
         else:
@@ -312,7 +312,7 @@ while answer not in ['0', 'exit']:
     elif (answer in ['4', 'delete']):
         std_delete_line(10)
         search_term = input(f"{PROMPT_COLOR}Search for: {INPUT_COLOR}"); std_delete_line()
-        search_result = search_keyword_in_column('dough.csv', 'domain', 'notes', search_term)
+        search_result = search_keyword_in_columns('dough.csv', 'domain', 'seedOrData', 'notes', search_term)
 
         if search_result.empty:
             print(f"{LOG_COLOR}No results for '{INPUT_COLOR}"+search_term+f"{LOG_COLOR}'.")
