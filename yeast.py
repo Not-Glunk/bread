@@ -68,7 +68,12 @@ def search_keyword_in_columns(csv_file, column1, column2, column3, keyword):
     """returns pd.DataFrame containing rows with specified keyword in three columns"""
     df = pd.read_csv(csv_file, sep=',', engine='python')
 
-    mask = (df[column1].str.contains(keyword, case=False, na=False) | df[column2].str.contains(keyword, case=False, na=False) | df[column3].str.contains(keyword, case=False, na=False))
+    mask_col1 = df[column1].str.contains(keyword, case=False, na=False)
+    mask_col2 = df[column2].str.contains(keyword, case=False, na=False)
+    mask_col3 = df[column3].str.contains(keyword, case=False, na=False)
+
+    mask = mask_col1 | (mask_col2 & (df['type'] != 'D')) | mask_col3
+
     return df[mask]
 
 def read_index(csv_file, index_number):
