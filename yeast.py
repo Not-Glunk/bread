@@ -10,6 +10,8 @@ import pandas as pd
 import sys
 import getpass
 import os
+import pydoc
+import subprocess
 
 PROMPT_COLOR = "\u001b[38;5;221m"
 INPUT_COLOR = "\u001b[38;5;214m"
@@ -172,12 +174,12 @@ def input_entry():
     entry[4] = ""
     entry[5] = ""
 
-    entry[0] = input(f"{PROMPT_COLOR}type ('P' for Password, 'D' for Data): {INPUT_COLOR}").upper(); std_delete_line()
-    clear_stdout("type ('P' for Password, 'D' for Data): ", entry[0])
-    while (entry[0] not in ['P', 'D']):
-        print(f"{LOG_COLOR}`type` has to be either 'P' or 'D'")
-        entry[0] = input(f"{PROMPT_COLOR}type ('P' for Password, 'D' for Data): {INPUT_COLOR}").upper(); std_delete_line(2)
-        clear_stdout("type ('P' for Password, 'D' for Data): ", entry[0])
+    entry[0] = input(f"{PROMPT_COLOR}type ('P' for Password, 'D' for Data, 'K' for Key): {INPUT_COLOR}").upper(); std_delete_line()
+    clear_stdout("type ('P' for Password, 'D' for Data, 'K' for Key): ", entry[0])
+    while (entry[0] not in ['P', 'D', 'K']):
+        print(f"{LOG_COLOR}`type` has to be 'P', 'D' or 'K'")
+        entry[0] = input(f"{PROMPT_COLOR}type ('P' for Password, 'D' for Data, 'K' for Key): {INPUT_COLOR}").upper(); std_delete_line(2)
+        clear_stdout("type ('P' for Password, 'D' for Data, 'K' for Key): ", entry[0])
 
     entry[1] = input(f"{PROMPT_COLOR}domain: {INPUT_COLOR}"); std_delete_line()
     clear_stdout("domain: ", entry[1])
@@ -189,15 +191,32 @@ def input_entry():
         entry[1] = input(f"{PROMPT_COLOR}domain: {INPUT_COLOR}"); std_delete_line(2)
         clear_stdout("domain: ", entry[1])
 
-    entry[2] = input(f"{PROMPT_COLOR}seedOrData: {INPUT_COLOR}"); std_delete_line()
-    clear_stdout("seedOrData: ", entry[2])
-    while (entry[2] == "" or ',' in entry[2]):
-        if (',' in entry[2]):
-            print(f"{LOG_COLOR}`seedOrData` cannot contain `,`")
-        else:
-            print(f"{LOG_COLOR}`seedOrData` cannot be null")
-        entry[2] = input(f"{PROMPT_COLOR}domain: {INPUT_COLOR}"); std_delete_line(2)
+    if (entry[0] == 'K'):
+        entry[0] = 'D'
+        sys.stdout.write("\x1b[?1049h\x1b[H") # i tried so hard, and got so far, but in the end, it didnt really matter; u get a buffer
+        print(f"{PROMPT_COLOR}key (ctrl+D to input):{INPUT_COLOR}")
+        entry[2] = sys.stdin.read()
+        sys.stdout.write("\x1b[?1049l")
+        while (entry[2] == "" or ',' in entry[2]):
+            if (',' in entry[2]):
+                sys.stdout.write("\x1b[?1049h")
+                print(f"{LOG_COLOR}`key` cannot contain `,`") # actually not needed but eh
+            else:
+                sys.stdout.write("\x1b[?1049h")
+                print(f"{LOG_COLOR}`key` cannot be null")
+            print(f"{PROMPT_COLOR}key (ctrl+D to input):{INPUT_COLOR}")
+            entry[2] = sys.stdin.read()
+            sys.stdout.write("\x1b[?1049l")
+    else:
+        entry[2] = input(f"{PROMPT_COLOR}seedOrData: {INPUT_COLOR}"); std_delete_line()
         clear_stdout("seedOrData: ", entry[2])
+        while (entry[2] == "" or ',' in entry[2]):
+            if (',' in entry[2]):
+                print(f"{LOG_COLOR}`seedOrData` cannot contain `,`")
+            else:
+                print(f"{LOG_COLOR}`seedOrData` cannot be null")
+            entry[2] = input(f"{PROMPT_COLOR}domain: {INPUT_COLOR}"); std_delete_line(2)
+            clear_stdout("seedOrData: ", entry[2])
 
     entry[3] = input(f"{PROMPT_COLOR}notes: {INPUT_COLOR}"); std_delete_line(2)
     clear_stdout("notes: ", entry[3])
@@ -289,8 +308,16 @@ while answer not in ['0', 'exit']:
 
             generated_data = generate_data_password(read_index('dough.csv', index_to_generate), input_passphrase)
             if (generated_data is not None):
-                print(f"{LOG_COLOR}Generated: {INPUT_COLOR}" + generated_data)
-                input(f"{LOG_COLOR}Press Enter to continue"); clear_stdout("Generated: ", generated_data); std_delete_line(2); print(f"{LOG_COLOR}Generated: {INPUT_COLOR}eh! volevi!")
+                if ('\n' in generated_data): # pgp was too strong for \x1b[2K
+                    if (os.getenv('XDG_SESSION_TYPE') == 'wayland'):
+                        wl_copy_p = subprocess.Popen(['wl-copy'], stdin=subprocess.PIPE); wl_copy_p.communicate(input=generated_data.encode())
+                    else: # fuck windows (and macos apparently)
+                        subprocess.Popen(['xclip', '-selection', 'clipboard'], stdin=subprocess.PIPE).communicate(generated_data.encode())
+                    pydoc.pager(f"{LOG_COLOR}Generated:\n" + "\n".join(f"{INPUT_COLOR}{line}" for line in generated_data.splitlines())) # hopefully temporary solution until i find a truly scrollable buffer
+                    print(f"{LOG_COLOR}Generated: {INPUT_COLOR}eh! volevi!")
+                else:
+                    print(f"{LOG_COLOR}Generated: {INPUT_COLOR}" + generated_data)
+                    input(f"{LOG_COLOR}Press Enter to continue"); clear_stdout("Generated: ", generated_data); std_delete_line(2); print(f"{LOG_COLOR}Generated: {INPUT_COLOR}eh! volevi!")
             else:
                 print(f"{LOG_COLOR}Failed to generate data.")
         print(f"{LOG_COLOR}---{DEFAULT_COLOR}")
