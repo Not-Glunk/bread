@@ -12,11 +12,13 @@ import getpass
 import os
 import pydoc
 import subprocess
+import re
 
 PROMPT_COLOR = "\u001b[38;5;221m"
 INPUT_COLOR = "\u001b[38;5;214m"
 LOG_COLOR = "\u001b[38;5;245m"
 DEFAULT_COLOR = "\u001b[0m"
+ansi_color = True
 
 def sha256sum(input_string):
     sha256Hash = hashlib.sha256(input_string.encode()).hexdigest()
@@ -82,7 +84,7 @@ def read_index(csv_file, index_number):
     """returns list containing row with specified index"""
     df = pd.read_csv(csv_file, sep=',', header=None, names=['index', 'type', 'domain', 'seedOrData', 'notes', 'pepper', 'format'], engine='python')
 
-    # pandas 3.0 fix, delete this line and uncomment the one below if you're on a past version, like the one that ships on termux
+    # pandas 3.0 fix, delete this line (df.loc) and uncomment the one below (df[index]) if you're on a past version, like the one that ships on termux
     df.loc[:, 'index'] = pd.to_numeric(df['index'], errors='coerce')
     # df['index'] = pd.to_numeric(df['index'], errors='coerce')
     index_data = df[df['index'] == index_number].iloc[0].values.tolist()
@@ -276,22 +278,31 @@ print(
 "\u001b[38;5;178m  ~ crackhead password manager™ ~\n"
 "\u001b[0m")
 
-menu_text = """
+def print_menu_text():
+    if (ansi_color is True):
+        ansi_status = "On"
+    else:
+        ansi_status = "Off"
+
+    print(f"""
 1) Attempt generating password/data
 2) Search for entry
 3) Add entry
 4) Delete entry
 5) Print all entries
+6) Toggle ansi colors in output ({ansi_status})
 
 0) Exit
-"""
+    """) # i hate python
+    return
+
 answer = "" # why the FUCK does python not have switch statements
 while answer not in ['0', 'exit']:
-    print(menu_text)
+    print_menu_text()
 
     answer = input(f"{PROMPT_COLOR}Select option: {INPUT_COLOR}")
     if (answer in ['1', 'generate']):
-        std_delete_line(10)
+        std_delete_line(11)
         search_term = input(f"{PROMPT_COLOR}Search for: {INPUT_COLOR}"); std_delete_line()
         search_result = search_keyword_in_columns('dough.csv', 'domain', 'seedOrData', 'notes', search_term)
 
@@ -309,21 +320,25 @@ while answer not in ['0', 'exit']:
             generated_data = generate_data_password(read_index('dough.csv', index_to_generate), input_passphrase)
             if (generated_data is not None):
                 if ('\n' in generated_data): # pgp was too strong for \x1b[2K
-                    if (os.getenv('XDG_SESSION_TYPE') == 'wayland'):
-                        wl_copy_p = subprocess.Popen(['wl-copy'], stdin=subprocess.PIPE); wl_copy_p.communicate(input=generated_data.encode())
-                    else: # fuck windows (and macos apparently)
-                        subprocess.Popen(['xclip', '-selection', 'clipboard'], stdin=subprocess.PIPE).communicate(generated_data.encode())
-                    pydoc.pager(f"{LOG_COLOR}Generated:\n" + "\n".join(f"{INPUT_COLOR}{line}" for line in generated_data.splitlines())) # hopefully temporary solution until i find a truly scrollable buffer
+                    if (os.getenv('XDG_SESSION_TYPE') == 'wayland'): wl_copy_p = subprocess.Popen(['wl-copy'], stdin=subprocess.PIPE); wl_copy_p.communicate(input=generated_data.encode()) # fuck windows (and macos apparently) (AND xorg) (and termux :( )
+                    if (ansi_color is False):
+                        pydoc.pager(f"{LOG_COLOR}Generated:\n\x1b[0m" + generated_data)
+                    else:
+                        pydoc.pager(f"{LOG_COLOR}Generated:\n" + "\n".join(f"{INPUT_COLOR}{line}" for line in generated_data.splitlines())) # hopefully temporary solution until i find a truly scrollable buffer
                     print(f"{LOG_COLOR}Generated: {INPUT_COLOR}eh! volevi!")
                 else:
-                    print(f"{LOG_COLOR}Generated: {INPUT_COLOR}" + generated_data)
-                    input(f"{LOG_COLOR}Press Enter to continue"); clear_stdout("Generated: ", generated_data); std_delete_line(2); print(f"{LOG_COLOR}Generated: {INPUT_COLOR}eh! volevi!")
+                    if (ansi_color is False):
+                        print(f"{LOG_COLOR}Generated: \x1b[0m" + generated_data)
+                        input(f"{LOG_COLOR}Press Enter to continue"); clear_stdout("Generated: ", generated_data); std_delete_line(2); print(f"{LOG_COLOR}Generated: {INPUT_COLOR}eh! volevi!")
+                    else:
+                        print(f"{LOG_COLOR}Generated: {INPUT_COLOR}" + generated_data)
+                        input(f"{LOG_COLOR}Press Enter to continue"); clear_stdout("Generated: ", generated_data); std_delete_line(2); print(f"{LOG_COLOR}Generated: {INPUT_COLOR}eh! volevi!")
             else:
                 print(f"{LOG_COLOR}Failed to generate data.")
         print(f"{LOG_COLOR}---{DEFAULT_COLOR}")
 
     elif (answer in ['2', 'search']):
-        std_delete_line(10)
+        std_delete_line(11)
         search_term = input(f"{PROMPT_COLOR}Search for: {INPUT_COLOR}"); std_delete_line()
         search_result = search_keyword_in_columns('dough.csv', 'domain', 'seedOrData', 'notes', search_term)
         if search_result.empty:
@@ -334,7 +349,7 @@ while answer not in ['0', 'exit']:
         print(f"{LOG_COLOR}---{DEFAULT_COLOR}")
 
     elif (answer in ['3', 'add']):
-        std_delete_line(10)
+        std_delete_line(11)
         print(f"{DEFAULT_COLOR}");
         inputted_entry = input_entry()
         add_entry('dough.csv', inputted_entry)
@@ -342,7 +357,7 @@ while answer not in ['0', 'exit']:
         print(f"{LOG_COLOR}---{DEFAULT_COLOR}")
 
     elif (answer in ['4', 'delete']):
-        std_delete_line(10)
+        std_delete_line(11)
         search_term = input(f"{PROMPT_COLOR}Search for: {INPUT_COLOR}"); std_delete_line()
         search_result = search_keyword_in_columns('dough.csv', 'domain', 'seedOrData', 'notes', search_term)
 
@@ -367,14 +382,18 @@ while answer not in ['0', 'exit']:
         print(f"{LOG_COLOR}---{DEFAULT_COLOR}")
 
     elif (answer in ['5', 'print']):
-        std_delete_line(10)
+        std_delete_line(11)
         print(f"{LOG_COLOR}Displaying entire database:")
         print_csv('dough.csv')
         print(f"{LOG_COLOR}---{DEFAULT_COLOR}")
 
+    elif (answer in ['6', 'color']):
+        std_delete_line(11)
+        ansi_color = not ansi_color
+
     elif (answer not in ['0', 'exit', '1', 'generate', '2', 'search', '3', 'add', '4', 'delete', '5', 'print']):
-        std_delete_line(10)
+        std_delete_line(11)
 
     print(f"{DEFAULT_COLOR}"); std_delete_line()
-std_delete_line(10)
+std_delete_line(11)
 print(f"{INPUT_COLOR}bye!")
