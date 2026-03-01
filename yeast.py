@@ -165,7 +165,7 @@ def clear_stdout(printed_string, stdio):
     std_length = len(printed_string) + len(stdio)
     columns = os.get_terminal_size(0).columns
 
-    if  std_length > columns:
+    if std_length > columns:
         lines_n = int(std_length / columns)
         std_delete_line(lines_n)
 
